@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V.G Transport</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; text-align: center; padding: 20px; }
+        h1 { color: #333; }
+        .truck-card { background: white; border-radius: 10px; padding: 20px; margin: 15px auto; width: 300px; box-shadow: 0px 4px 8px rgba(0,0,0,0.2); }
+        .truck-card h3 { color: #d9534f; margin-top: 0; }
+        button { background-color: #5cb85c; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background-color: #4cae4c; }
+    </style>
+</head>
+<body>
+
+    <h1>🚚 V.G Transport - Online Booking</h1>
+    <button onclick="loadTrucks()">Show Available Trucks</button>
+    
+    <div id="truckList">
+        </div>
+
+    <script>
+        // 1. Vandigala database-la irunthu eduthu kaattum function
+        async function loadTrucks() {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/available_trucks");
+                const data = await response.json();
+                
+                const listDiv = document.getElementById("truckList");
+                listDiv.innerHTML = ""; 
+
+                if(data.available_trucks.length === 0) {
+                    listDiv.innerHTML = "<p>No trucks are available right now. Please check later.</p>";
+                    return;
+                }
+
+                data.available_trucks.forEach(truck => {
+                    listDiv.innerHTML += `
+                        <div class="truck-card">
+                            <h3>${truck.model}</h3>
+                            <p><strong>Capacity:</strong> ${truck.capacity_tons} Tons</p>
+                            <p><strong>Price:</strong> ₹${truck.price_per_km} / km</p>
+                            <button onclick="bookTruck('${truck.truck_id}')">Book Now</button>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                alert("Server is not running! Please start the API.");
+            }
+        }
+
+        // 2. Vandi book aagum pothu backend-kku details anuppum function (Pudhus)
+        async function bookTruck(truckId) {
+            // Screen-la Customer kitta details kekkurom
+            let customerName = prompt("Enter Customer Name:");
+            if (!customerName) return; // Cancel panna onnum aagathu
+            
+            let distance = prompt("Enter Distance (in km):");
+            if (!distance || isNaN(distance)) {
+                alert("Please enter a valid number for distance.");
+                return;
+            }
+
+            // Namma API-kku details-a anuppurom
+            try {
+                const response = await fetch("http://127.0.0.1:8000/book_truck", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        customer_name: customerName,
+                        truck_id: truckId,
+                        distance_km: parseFloat(distance)
+                    })
+                });
+
+                const result = await response.json();
+
+                if(response.ok) {
+                    // Success message kaatturom
+                    alert(`✅ ${result.message}\nBooking ID: ${result.booking_id}\nTotal Bill: ₹${result.total_price}`);
+                    
+                    // Book aana vandiya list-la irunthu maraippa, thirumba page-a refresh pandrom
+                    loadTrucks();
+                } else {
+                    alert(`❌ Error: ${result.detail}`);
+                }
+            } catch (error) {
+                alert("Something went wrong with the booking.");
+            }
+        }
+    </script>
+
+</body>
+</html>
