@@ -18,14 +18,13 @@
     <h1>🚚 V.G Transport - Online Booking</h1>
     <button onclick="loadTrucks()">Show Available Trucks</button>
     
-    <div id="truckList">
-        </div>
+    <div id="truckList"></div>
 
     <script>
-        // 1. Vandigala database-la irunthu eduthu kaattum function
+        // 1. Vandi details-a edukkum function
         async function loadTrucks() {
             try {
-                const response = await fetch("http://127.0.0.1:8000/available_trucks");
+                const response = await fetch("https://vg-transport-api.onrender.com/available_trucks");
                 const data = await response.json();
                 
                 const listDiv = document.getElementById("truckList");
@@ -51,11 +50,10 @@
             }
         }
 
-        // 2. Vandi book aagum pothu backend-kku details anuppum function (Pudhus)
+        // 2. Vandi book aagum pothu backend-kku anuppum function
         async function bookTruck(truckId) {
-            // Screen-la Customer kitta details kekkurom
             let customerName = prompt("Enter Customer Name:");
-            if (!customerName) return; // Cancel panna onnum aagathu
+            if (!customerName) return; 
             
             let distance = prompt("Enter Distance (in km):");
             if (!distance || isNaN(distance)) {
@@ -63,9 +61,8 @@
                 return;
             }
 
-            // Namma API-kku details-a anuppurom
             try {
-                const response = await fetch("http://127.0.0.1:8000/book_truck", {
+                const response = await fetch("https://vg-transport-api.onrender.com/book_truck", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -80,11 +77,8 @@
                 const result = await response.json();
 
                 if(response.ok) {
-                    // Success message kaatturom
                     alert(`✅ ${result.message}\nBooking ID: ${result.booking_id}\nTotal Bill: ₹${result.total_price}`);
-                    
-                    // Book aana vandiya list-la irunthu maraippa, thirumba page-a refresh pandrom
-                    loadTrucks();
+                    loadTrucks(); 
                 } else {
                     alert(`❌ Error: ${result.detail}`);
                 }
