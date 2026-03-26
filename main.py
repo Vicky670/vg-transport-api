@@ -149,3 +149,23 @@ def complete_ride(truck_id: str):
     conn.close()
     
     return {"message": f"✅ Ride completed! Truck {truck_id} is now available for next booking."}
+    # --- TRIP MUDINJA PIRAGU VANDIYA FREE AAKKUM FUNCTION ---
+@app.post("/end_trip/{truck_id}")
+def end_trip(truck_id: str):
+    conn = sqlite3.connect("vg_transport.db")
+    cursor = conn.cursor()
+    
+    # Vandi database-la irukka nu check pandrom
+    cursor.execute("SELECT * FROM trucks WHERE truck_id=?", (truck_id,))
+    truck = cursor.fetchone()
+    
+    if not truck:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Intha vandi database-la illai!")
+        
+    # Vandiyoda status-a thirumba "Free" (is_available = 1) nu maathurom
+    cursor.execute("UPDATE trucks SET is_available = 1 WHERE truck_id=?", (truck_id,))
+    conn.commit()
+    conn.close()
+    
+    return {"message": f"Trip Mudinjiduchu! {truck_id} vandi ippo adutha booking-kku ready aagiduchu."}
